@@ -6,11 +6,13 @@ import shutil  # move everything
 from pathlib import Path  # for making the _todel folder if it doesn't exist
 import webbrowser
 
+# /Users/costa/Dropbox/EIDI WS 22_23/Homework/HW01/Jonathan
 
 def open_file(file_path): # if using this you don't need to distinguish between / and \ for the different file systems
     if platform.system() == 'Darwin':  # macOS
         if file_path.endswith('.pdf'):
-            webbrowser.open_new(file_path)
+            subprocess.call(['open', file_path.replace('\\', '/')])
+            # webbrowser.open_new(file_path)
         else:
             subprocess.call(('open', file_path.replace('\\', '/')))
     elif platform.system() == 'Windows':  # Windows
@@ -58,7 +60,13 @@ for path, directories, files in os.walk(homework_path):  # getting all the files
 
             # opening the homework file in the default app:
             filepath = path + '\\' + files[i]
+
             open_file(filepath)
+
+
+
+
+
 
             # initiating a new line for storing the data for this student and the iteration variable i
             line = str(name) + "\t" + str(matr_nr) + "\t"
