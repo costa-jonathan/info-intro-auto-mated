@@ -21,7 +21,7 @@ page = input('Enter link of grading page, for example: '
              '\"www.moodle.tum.de/mod/assign/view.php?id=9999999&action=grading\". '
              'Must be from the tab \"Alle anzeigen\".\nEnter here: ')
 # 3. Excel files directory:
-excel_folder = "C:\\Users\\Name\\Dropbox\\EIDI WS 21_22\\Homework\\" # todo: replace the string with the file path for the excel files
+excel_folder = "/Users/costa/Dropbox/EIDI WS 22_23/" # todo: replace the string with the file path for the excel files
 # 4. columns:
 columns = ['Name', 'MatrNr', 'Comment', 'Sum']
 # (5. week of correction)
@@ -129,7 +129,7 @@ for person in grading_sheets.keys():
                 input_field_grade.send_keys(standard_comment.format(person, emails[person]))
 
             # silent mode: # todo: remove the # of the line under this one to enable 'silent mode' which will not notify the students of their mark being entered
-            # webDriver.find_element(By.XPATH, "//input[@name='sendstudentnotifications' and @type='checkbox']").click()
+            webDriver.find_element(By.XPATH, "//input[@name='sendstudentnotifications' and @type='checkbox']").click()
 
             webDriver.find_element(By.XPATH, "//button[@name='savechanges']").click()
             time.sleep(1.5)

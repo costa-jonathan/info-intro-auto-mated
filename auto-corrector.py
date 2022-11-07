@@ -113,8 +113,8 @@ for path, directories, files in os.walk(homework_path):  # getting all the files
                             i += 1
                             shutil.move(path, homework_path + "/_todel")
 
-input('Please transfer the data now to the excel file (press enter to open the file)')
-# opening the text and excel file in the default app:
+input('Please transfer the data now to the Excel file (press enter to open the files)')
+# opening the text and Excel file in the default app:
 try:
     open_file(f'{temp_path}\\Homework_{person}_temp.txt')
     open_file(f'{temp_path}\\Homework_{person}.xlsx')
@@ -122,6 +122,6 @@ except FileExistsError and FileNotFoundError:
     'I cannot find the excel file - maybe you don\'t have it downloaded - in that case please open it in the browser'
 
 
-input('Press enter to finish your Homework correction')
+input('Press press enter to finish your Homework correction')
 
 print('You are done now - great job!')
