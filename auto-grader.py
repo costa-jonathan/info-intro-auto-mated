@@ -9,9 +9,10 @@ import pandas as pd
 from selenium.webdriver.common.keys import Keys
 import pyautogui
 import os
+import math
+import numbers
 
-
-# todo: if help neede contact Jonathan Costa @ guithub: https://github.com/costa-jonathan
+# todo: if help needed contact Jonathan Costa @ guithub: https://github.com/costa-jonathan
 # Hard coded stuff:
 # 1. Moodle user credentials
 moodle_user = ""  # todo: put in your moodle username in the string
@@ -21,9 +22,9 @@ page = input('Enter link of grading page, for example: '
              '\"www.moodle.tum.de/mod/assign/view.php?id=9999999&action=grading\". '
              'Must be from the tab \"Alle anzeigen\".\nEnter here: ')
 # 3. Excel files directory:
-excel_folder = "/Users/costa/Dropbox/EIDI WS 22_23/" # todo: replace the string with the file path for the excel files
+excel_folder = "/Users/costa/Dropbox/EIDI WS 22_23/Homework/"  # todo: replace the string with the file path for the excel files
 # 4. columns:
-columns = ['Name', 'MatrNr', 'Comment', 'Sum']
+columns = ['Name', 'MatrNr', 'Comment', 'Task 1 (2P)', 'Task 2 (2P)', 'Task 3 (2P)']
 # (5. week of correction)
 week = int(input('Enter week number: '))
 # emails
@@ -49,15 +50,20 @@ for file in os.listdir(excel_folder):
     if file.endswith('.xlsx') and not file.startswith('~$'):  # and file != 'Homework_Isabella.xlsx'
         print(file)
         grading_temp = pd.read_excel(pd.ExcelFile(excel_folder + file), f'HA{week:02d}')[columns]
+        grading_temp.dropna(inplace=True, subset=['Task 1 (2P)', 'Task 2 (2P)', 'Task 3 (2P)'])
         grading_temp['MatrNr'] = grading_temp['MatrNr'].apply(lambda x: fix_matr_nr(x))
+        grading_temp['Sum'] = grading_temp['Task 1 (2P)'].astype('int') + grading_temp['Task 2 (2P)'].astype('int') + \
+                              grading_temp['Task 3 (2P)'].astype('int')
         grading_sheets[file.split('_')[1][:-5]] = grading_temp
 
 webDriver = Chrome(service=Service(ChromeDriverManager().install()))
 webDriver.maximize_window()
 webDriver.get(page)
 
-pyautogui.keyDown('ctrl')
+pyautogui.keyDown('command')
 pyautogui.press('t')
+pyautogui.keyUp('command')
+pyautogui.hotkey('ctrl')
 pyautogui.press('tab')
 pyautogui.keyUp('ctrl')
 
@@ -75,7 +81,6 @@ time.sleep(10)
 select = Select(webDriver.find_element(By.ID, 'id_perpage'))
 select.select_by_value('-1')
 
-
 mtr_nrs = webDriver.find_elements(By.XPATH, "//tr[contains(@class, 'unselectedrow')]")
 online_list_name = {str(k.find_element(By.XPATH, ".//td[contains(@class, 'c2')]").text): k for k in
                     mtr_nrs}
@@ -84,61 +89,66 @@ online_list_matr_nr = {str(k.find_element(By.XPATH, ".//td[contains(@class, 'c3'
 
 main_window = webDriver.current_window_handle
 
-
 # this is the first loop over all grades in the Excel sheets and comparing the NAMEs
 for person in grading_sheets.keys():
     print(f'Grading for {person}')
     grading = grading_sheets[person]
     grading_len = len(grading)
-    for line_number, (index, row) in enumerate(grading.iterrows()):
-        print("Currently on row: {}; Currently iterated {}% of rows".format(
-            line_number, round(100 * (line_number + 1) / grading_len, 1)))
-        try:
-            web_row_element = online_list_name[(str(row['Name'].strip()))]
-            link = web_row_element.find_element(By.XPATH, ".//td[contains(@class, 'c6')]/a").get_attribute(
-                'href')
-
-            webDriver.switch_to.window(webDriver.window_handles[1])
-            webDriver.get(link)
-
-            input_field_grade = ''
+    if (grading.empty):
+        print(grading)
+        continue
+    else:
+        for line_number, (index, row) in enumerate(grading.iterrows()):
+            print("Currently on row: {}; Currently iterated {}% of rows".format(
+                line_number, round(100 * (line_number + 1) / grading_len, 1)))
             try:
-                time.sleep(2)
-                input_field_grade = webDriver.find_element(By.XPATH, "//input[@name='grade']")
-            except:
-                time.sleep(3)
-                input_field_grade = webDriver.find_element(By.XPATH, "//input[@name='grade']")
-            input_field_grade.clear()
-            input_field_grade.send_keys(row['Sum'])
+                if (isinstance(row['Name'], numbers.Number)):
+                    if(math.isnan(row['Name'])):
+                        continue
+                else:
+                    web_row_element = online_list_name[(str(row['Name'].strip()))]
+                    link = web_row_element.find_element(By.XPATH, ".//td[contains(@class, 'c6')]/a").get_attribute(
+                        'href')
 
-            try:
-                time.sleep(1)
-                input_field_grade = webDriver.find_element(By.XPATH,
-                                                           "//div[@id='id_assignfeedbackcomments_editoreditable']")
-            except:
-                time.sleep(1)
-                input_field_grade = webDriver.find_element(By.XPATH,
-                                                           "//div[@id='id_assignfeedbackcomments_editoreditable']")
+                    webDriver.switch_to.window(webDriver.window_handles[1])
+                    webDriver.get(link)
 
-            input_field_grade.clear()
-            if str(row['Comment']) != "nan" and str(row['Comment']) != "NaN":
+                    input_field_grade = ''
+                    try:
+                        time.sleep(2)
+                        input_field_grade = webDriver.find_element(By.XPATH, "//input[@name='grade']")
+                    except:
+                        time.sleep(3)
+                        input_field_grade = webDriver.find_element(By.XPATH, "//input[@name='grade']")
+                    input_field_grade.clear()
+                    input_field_grade.send_keys(row['Sum'])
 
+                    try:
+                        time.sleep(1)
+                        input_field_grade = webDriver.find_element(By.XPATH,
+                                                                   "//div[@id='id_assignfeedbackcomments_editoreditable']")
+                    except:
+                        time.sleep(1)
+                        input_field_grade = webDriver.find_element(By.XPATH,
+                                                                   "//div[@id='id_assignfeedbackcomments_editoreditable']")
 
-                input_field_grade.send_keys(str(row['Comment']) + standard_comment.format(person, emails[person]))
-            else:
-                input_field_grade.send_keys(standard_comment.format(person, emails[person]))
+                    input_field_grade.clear()
+                    if str(row['Comment']) != "nan" and str(row['Comment']) != "NaN":
 
-            # silent mode: # todo: remove the # of the line under this one to enable 'silent mode' which will not notify the students of their mark being entered
-            webDriver.find_element(By.XPATH, "//input[@name='sendstudentnotifications' and @type='checkbox']").click()
+                        input_field_grade.send_keys(str(row['Comment']) + standard_comment.format(person, emails[person]))
+                    else:
+                        input_field_grade.send_keys(standard_comment.format(person, emails[person]))
 
-            webDriver.find_element(By.XPATH, "//button[@name='savechanges']").click()
-            time.sleep(1.5)
-            webDriver.switch_to.window(webDriver.window_handles[0])
-            grading.drop(line_number, inplace=True)
+                    # silent mode: # todo: remove the # of the line under this one to enable 'silent mode' which will not notify the students of their mark being entered
+                    webDriver.find_element(By.XPATH, "//input[@name='sendstudentnotifications' and @type='checkbox']").click()
 
-        except (KeyError, AttributeError) as error:
-            continue
-
+                    webDriver.find_element(By.XPATH, "//button[@name='savechanges']").click()
+                    time.sleep(1.5)
+                    webDriver.switch_to.window(webDriver.window_handles[0])
+                    grading.drop(line_number, inplace=True)
+            except (KeyError, TypeError) as e:  # (KeyError, AttributeError)
+                print(e)
+                continue
 
 # this second loop (just copied because I am too lazy to think of an elegant solution) does the same but checks the
 # MATRNR of the students
@@ -192,12 +202,10 @@ for person in grading_sheets.keys():
             print(row)
             continue
 
-
 # a printout in the console of the failed lines
 for person in grading_sheets.keys():
     grading = grading_sheets[person]
     print(grading)
-
 
 # save said failed lines in a text file
 for person in grading_sheets.keys():
