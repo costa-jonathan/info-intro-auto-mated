@@ -1,12 +1,10 @@
 import os  # for finding the files and opening in default app (Windows)
 import subprocess  # for macOS and Linux
 import re  # for matching the matriculation number
-import platform, sys  # checking for operating systems
+import platform  # checking for operating systems
 import shutil  # move everything
 from pathlib import Path  # for making the _todel folder if it doesn't exist
-import webbrowser
 
-# /Users/costa/Dropbox/EIDI WS 22_23/Homework/HW01/Jonathan
 
 def open_file(file_path): # if using this you don't need to distinguish between / and \ for the different file systems
     if platform.system() == 'Darwin':  # macOS
@@ -64,10 +62,6 @@ for path, directories, files in os.walk(homework_path):  # getting all the files
             open_file(filepath)
 
 
-
-
-
-
             # initiating a new line for storing the data for this student and the iteration variable i
             line = str(name) + "\t" + str(matr_nr) + "\t"
             i = 1
@@ -93,7 +87,7 @@ for path, directories, files in os.walk(homework_path):  # getting all the files
                 if i == 4:
                     comment = input('Enter a voluntary comment (or redo the whole grading with n, b or 0): ')
                     if comment == 'b' or comment == '0' or comment == 'n':
-                        line = str(matr_nr) + "\t"
+                        line = str(name) + "\t" + str(matr_nr) + "\t"
                         i = 1
                     else:
                         line += comment + '\n'
